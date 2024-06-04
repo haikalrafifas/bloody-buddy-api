@@ -104,4 +104,17 @@ class DonorController extends Controller
     {
         //
     }
+
+    public function checkLatestDonor()
+    {
+        if ( !($donor = Donor::where('user_id', Auth::id())->first()) ) {
+            return $this->sendError('Not Found', 'No latest donor were found!', Response::HTTP_NOT_FOUND);
+        }
+
+        if ( Carbon::now()->diffInMonths($donor->created_at) < 2 ) {
+            return $this->sendError('Bad Request', ['is_valid' => false], Response::HTTP_BAD_REQUEST);
+        }
+
+        return $this->sendResponse(['is_valid' => true], 'You are allowed to fill another form!');
+    }
 }
