@@ -24,8 +24,8 @@ return new class extends Migration
             $table->char('blood_type', 2);
             $table->integer('body_mass');
             $table->integer('hemoglobin_level');
-            $table->integer('blood_pressure');
-            $table->text('medical_conditions');
+            $table->string('blood_pressure');
+            $table->text('medical_conditions')->nullable();
             $table->timestamps();
         });
     }
