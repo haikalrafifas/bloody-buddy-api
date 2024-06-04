@@ -32,7 +32,6 @@ Route::controller(AuthController::class)->prefix('auth')->group(function () {
 
 Route::controller(DonorController::class)->group(function () {
     Route::resource('donors', DonorController::class);
-    Route::get('donor/status/check-latest', [DonorController::class, 'checkLatestDonor']);
 });
 
 Route::controller(ScheduleController::class)->group(function () {
