@@ -24,7 +24,7 @@ class DonorController extends Controller
 
         $data = DonorResource::collection($donors);
 
-        return $this->sendResponse('Successfully get donors!', $data);
+        return $this->sendResponse(message: 'Successfully get donors!', data: $data);
     }
 
     /**

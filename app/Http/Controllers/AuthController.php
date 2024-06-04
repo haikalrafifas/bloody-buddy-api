@@ -8,6 +8,7 @@ use Tymon\JWTAuth\Exceptions\JWTException;
 use App\Models\User;
 // use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -23,18 +24,23 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        $request->validate([
+        $validate = $request->validate([
             'username' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:6|confirmed',
         ]);
 
+        // $validate->?;
+
+        return $this->sendResponse('test', Str::uuid()->toString());
+
         $user = User::create([
-            'username' => $request->name,
+            'uuid' => Str::uuid()->toString(),
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'username' => $request->name,
         ]);
-        $user = $user->only(['uuid', 'email', 'password']);
+        $user = $user->only(['uuid', 'email', 'password', 'username']);
 
         $token = JWTAuth::fromUser($user);
 
