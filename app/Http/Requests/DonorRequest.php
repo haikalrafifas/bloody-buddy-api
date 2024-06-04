@@ -31,14 +31,14 @@ class DonorRequest extends FormRequest
             'phone_number' => 'required|string',
             'address' => 'required|string',
             'body_mass' => 'required|numeric',
-            'hemoglobin' => 'required|numeric',
+            'hemoglobin_level' => 'required|numeric',
             'blood_type' => 'required|string|max:2',
             'blood_pressure' => 'required|string',
             'medical_conditions' => 'string',
         ];
     }
 
-    public function failedValidation(Validator $validator) 
+    public function failedValidation(Validator $validator)
     {
         throw new HttpResponseException(
             response()->json([

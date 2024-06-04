@@ -17,6 +17,7 @@ return new class extends Migration
             $table->integer('user_id');
             $table->integer('status_id');
             $table->string('name');
+            $table->string('nik');
             $table->date('dob');
             $table->enum('gender', ['M', 'F'])->default('M');
             $table->char('phone_number', 16);
