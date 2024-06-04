@@ -30,7 +30,5 @@ Route::controller(AuthController::class)->prefix('auth')->group(function () {
     Route::post('logout', [AuthController::class, 'logout']);
 });
 
-// Route::resource('my-donor', MyDonorController::class);
-// Route::resource('status', StatusController::class);
 Route::resource('donors', DonorController::class);
 Route::resource('schedules', ScheduleController::class);

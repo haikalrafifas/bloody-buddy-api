@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Http\Response;
 
 class DonorRequest extends FormRequest
 {
@@ -11,7 +14,7 @@ class DonorRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +25,27 @@ class DonorRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'name' => 'required|string',
+            'nik' => 'required|string|max:16',
+            'dob' => 'required|date|date_format:Y-m-d',
+            'phone_number' => 'required|string',
+            'address' => 'required|string',
+            'body_mass' => 'required|numeric',
+            'hemoglobin' => 'required|numeric',
+            'blood_type' => 'required|string|max:2',
+            'blood_pressure' => 'required|string',
+            'medical_conditions' => 'string',
         ];
+    }
+
+    public function failedValidation(Validator $validator) 
+    {
+        throw new HttpResponseException(
+            response()->json([
+                'status' => Response::HTTP_BAD_REQUEST,
+                'message' => 'Validation Errors',
+                'errors' => $validator->errors(),
+            ], Response::HTTP_BAD_REQUEST)
+        );
     }
 }

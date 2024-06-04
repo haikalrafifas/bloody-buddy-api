@@ -7,6 +7,9 @@ use Illuminate\Http\Response;
 use App\Models\Donor;
 use App\Http\Requests\DonorRequest;
 use App\Http\Resources\DonorResource;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class DonorController extends Controller
 {
@@ -38,9 +41,36 @@ class DonorController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(DonorRequest $request)
     {
-        //
+        $age = Carbon::now()->diffInYears($request->dob);
+        if ( $age < 17 || $age > 60 ) {
+            return $this->sendError('Bad Request', 'Invalid age!', Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $donor = Donor::create([
+                'uuid' => Str::uuid()->toString(),
+                'name' => $request->name,
+                'nik' => $request->nik,
+                'user_id' => Auth::id(),
+                'status_id' => 1,
+                'dob' => $request->dob,
+                'phone_number' => $request->phone_number,
+                'address' => $request->address,
+                'body_mass' => (int) $request->body_mass,
+                'hemoglobin_level' => (int) $request->hemoglobin,
+                'blood_type' => $request->blood_type,
+                'blood_pressure' => $request->blood_pressure,
+                'medical_conditions' => $request->medical_conditions,
+            ]);
+
+            $data = new DonorResource($donor);
+
+            return $this->sendResponse($data, 'Successfully add donor!');
+        } catch (Exception $e) {
+            return $this->sendError('Internal Server Error', $e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
