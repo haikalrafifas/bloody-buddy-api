@@ -2,12 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Models\Schedule;
+use App\Http\Resources\ScheduleResource;
 
 class ScheduleController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['except' => ['index', 'show']]);
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -16,14 +23,9 @@ class ScheduleController extends Controller
         // GET
         $schedules = Schedule::all();
 
-        return response()->json([
-            'status' => Response::HTTP_OK,
-            'message' => 'Successfully get schedules!',
-            'data' => $schedules,
-        ]);
+        $data = ScheduleResource::collection($schedules);
 
-
-        // return $this->sendResponse("halo");
+        return $this->sendResponse('Successfully get schedules!', $data);
     }
 
     /**
