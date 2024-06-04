@@ -20,4 +20,9 @@ class Donor extends Model
     protected $hidden = [];
 
     protected $casts = [];
+
+    public function status()
+    {
+        return $this->belongsTo(DonorStatus::class, 'status_id');
+    }
 }

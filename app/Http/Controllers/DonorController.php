@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use App\Models\Donor;
+use App\Models\DonorStatus;
 use App\Http\Requests\DonorRequest;
 use App\Http\Resources\DonorResource;
 
@@ -12,7 +12,7 @@ class DonorController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:api', ['except' => ['index', 'show']]);
+        $this->middleware('auth:api', ['except' => ['index', 'show', 'DonorStatus']]);
     }
 
     /**
@@ -73,5 +73,11 @@ class DonorController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    public function DonorStatus()
+    {
+        $status = DonorStatus::all();
+        return $this->sendResponse(message:'', data: $status);
     }
 }

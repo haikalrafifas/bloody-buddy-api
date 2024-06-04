@@ -16,7 +16,7 @@ return new class extends Migration
             $table->uuid('uuid');
             $table->text('address');
             $table->timestamp('start_date');
-            $table->timestamp('end_date');
+            $table->timestamp('end_date')->nullable()->default(null);
             $table->string('image');
             $table->timestamps();
         });

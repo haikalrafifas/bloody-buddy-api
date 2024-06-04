@@ -34,3 +34,4 @@ Route::controller(AuthController::class)->prefix('auth')->group(function () {
 // Route::resource('status', StatusController::class);
 Route::resource('donors', DonorController::class);
 Route::resource('schedules', ScheduleController::class);
+Route::get('donor/status', [DonorController::class,'DonorStatus']);
