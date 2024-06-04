@@ -30,7 +30,11 @@ Route::controller(AuthController::class)->prefix('auth')->group(function () {
     Route::post('logout', [AuthController::class, 'logout']);
 });
 
-// Route::resource('my-donor', MyDonorController::class);
-// Route::resource('status', StatusController::class);
-Route::resource('donors', DonorController::class);
-Route::resource('schedules', ScheduleController::class);
+Route::controller(DonorController::class)->group(function () {
+    Route::resource('donors', DonorController::class);
+    Route::get('donor/status/check-latest', [DonorController::class, 'checkLatestDonor']);
+});
+
+Route::controller(ScheduleController::class)->group(function () {
+    Route::resource('schedules', ScheduleController::class);
+});

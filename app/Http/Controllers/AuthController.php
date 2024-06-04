@@ -3,11 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Tymon\JWTAuth\Facades\JWTAuth;
-use Tymon\JWTAuth\Exceptions\JWTException;
+use Illuminate\Http\Response;
 use App\Models\User;
-// use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
@@ -23,23 +24,54 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'username' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:6|confirmed',
+            'password' => 'required|string|min:6',//|confirmed',
         ]);
+
+        if ( $validator->fails() ) {
+            return $this->sendError('Bad Request', errors: $validator->errors(), status: Response::HTTP_BAD_REQUEST);
+        }
 
         $user = User::create([
-            'username' => $request->name,
+            'uuid' => Str::uuid()->toString(),
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'username' => $request->username,
         ]);
-        $user = $user->only(['uuid', 'email', 'password']);
+        
+        $user = $user->only(['uuid', 'email', 'username', 'created_at']);
 
-        $token = JWTAuth::fromUser($user);
+        return $this->sendResponse(message: 'User created successfully!', extra: [ 'user' => $user ]);
+    }
 
-        return $this->sendResponse(message: 'User created successfully!', extra: [
-            'user' => $user,
+    public function login(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|string|email|max:255',//|unique:users',
+            'password' => 'required|string|min:6',//|confirmed',
+        ]);
+
+        if ( $validator->fails() ) {
+            return $this->sendError('Bad Request', errors: $validator->errors(), status: Response::HTTP_BAD_REQUEST);
+        }
+
+        if ( !Auth::attempt($request->only('email', 'password')) ) {
+            return $this->sendError('Unauthorized', 'Account not found!', Response::HTTP_UNAUTHORIZED);
+        }
+
+        $user = Auth::user();
+
+        $token = Auth::claims([])->fromUser($user);
+
+        return $this->sendResponse(message: 'Successfully logged in!', extra: [
+            'user' => [
+                'uuid' => $user->uuid,
+                'username' => $user->username,
+                'email' => $user->email,
+                'created_at' => $user->created_at,
+            ],
             'authorization' => [
                 'token' => $token,
                 'type' => 'bearer',
@@ -47,33 +79,26 @@ class AuthController extends Controller
         ]);
     }
 
-    public function login(Request $request)
-    {
-        $request->validate([
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:6|confirmed',
-        ]);
-
-        $credentials = $request->only('email', 'password');
-
-        try {
-            if (! $token = JWTAuth::attempt($credentials)) {
-                return response()->json(['error' => 'invalid_credentials'], 400);
-            }
-        } catch (JWTException $e) {
-            return response()->json(['error' => 'could_not_create_token'], 500);
-        }
-
-        return response()->json(compact('token'));
-    }
-
     public function refresh(Request $request)
     {
-
+        $user = Auth::user();
+        return $this->sendResponse(message: 'Successfully refresh token!', extra: [
+            'user' => [
+                'uuid' => $user->uuid,
+                'username' => $user->username,
+                'email' => $user->email,
+                'created_at' => $user->created_at,
+            ],
+            'authorization' => [
+                'token' => Auth::refresh(),
+                'type' => 'bearer',
+            ],
+        ]);
     }
 
     public function logout(Request $request)
     {
-
+        Auth::logout();
+        return $this->sendResponse(message: 'Successfully logged out!');
     }
 }
