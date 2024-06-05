@@ -123,7 +123,7 @@ class ScheduleController extends Controller
     public function destroy(string $uuid)
     {
         try {
-            if ( !($schedule = Schedule::where('uuid', $uuid)) ) {
+            if ( !($schedule = Schedule::with('location')->where('uuid', $uuid)) ) {
                 return $this->sendError();
             }
 
@@ -132,7 +132,7 @@ class ScheduleController extends Controller
             $schedule->delete();
 
             $data = new ScheduleResource(
-                $schedule::with(['location'])->orderBy('created_at', 'desc')->first()
+                $schedule->with(['location'])->orderBy('created_at', 'desc')->first()
             );
 
             return $this->sendResponse($data, 'Successfully add new schedule!');
