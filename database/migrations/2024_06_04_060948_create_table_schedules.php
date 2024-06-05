@@ -16,8 +16,8 @@ return new class extends Migration
             $table->uuid('uuid');
             $table->int('location_id');
             $table->int('daily_quota');
-            $table->timestamp('start_date');
-            $table->timestamp('end_date');
+            $table->dateTime('start_date')->nullable();
+            $table->dateTime('end_date')->nullable();
             $table->timestamps();
         });
     }

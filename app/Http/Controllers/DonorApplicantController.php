@@ -69,11 +69,12 @@ class DonorApplicantController extends Controller
             );
         }
 
+        // Check the availability of the schedule
         if ( !($schedule = Schedule::where('uuid', $request->schedule_uuid)->first()) ) {
             return $this->sendError('Not Found', 'Schedule was not found!', Response::HTTP_NOT_FOUND);
         }
 
-        // Check if the quota is exceeded
+        // Check if the schedule's daily quota is exceeded
         try {
             DonorSchedule::checkQuota($schedule->id);
         } catch (\Exception $e) {
@@ -133,12 +134,14 @@ class DonorApplicantController extends Controller
             return $this->sendError('Bad Request', errors: $validator->errors(), status: Response::HTTP_BAD_REQUEST);
         }
 
+        $donorSchedule = DonorSchedule::where('uuid', $uuid);
+
         // uuid: From donor_schedules, not donor_applicants!
-        if ( !($donorSchedule = DonorSchedule::where('uuid', $uuid))->first() ) {
+        if ( !($donorScheduleData = $donorSchedule->first()) ) {
             return $this->sendError('Not Found', 'Donor applicant schedule was not found!', Response::HTTP_NOT_FOUND);
         }
 
-        $status = DonorStatus::find($donorSchedule->status_id)->first();
+        $status = DonorStatus::findOrFail($donorScheduleData->status_id);
 
         $validActions = [
             // action => [status, incrementBy
@@ -154,10 +157,13 @@ class DonorApplicantController extends Controller
             return $this->sendError('Bad Request', 'Unknown action!', Response::HTTP_BAD_REQUEST);
         }
 
+        // Change the status according to action and current state of status
         if ( $validActions[$action][0] === $status->name ) {
             $donorSchedule->update([
                 'status_id' => $status->id + $validActions[$request->action][1],
             ]);
+        } else {
+            return $this->sendError('Bad Request', 'Invalid action to status!', Response::HTTP_BAD_REQUEST);
         }
 
         try {
@@ -165,8 +171,7 @@ class DonorApplicantController extends Controller
                 DonorApplicant::with([
                     'donorSchedules.schedule.location',
                     'donorSchedules.donorStatus',
-                ])->orderBy('created_at', 'desc')->first()
-                ->where('uuid', Auth::id())
+                ])->orderBy('created_at', 'desc')->where('donor_id', Auth::id())->first()
             );
 
             return $this->sendResponse($data, 'Successfully add donor applicant data!');
