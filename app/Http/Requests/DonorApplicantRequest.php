@@ -33,7 +33,7 @@ class DonorApplicantRequest extends FormRequest
             'body_mass' => 'required|numeric',
             'hemoglobin_level' => 'required|string',
             'blood_type' => 'required|string|max:2',
-            'blood_pressure' => 'required|string',
+            'blood_pressure' => 'required|string|regex:/^\d+\/\d+$/',
             'medical_conditions' => 'string',
             'schedule_uuid' => 'required|string',
         ];
@@ -48,5 +48,12 @@ class DonorApplicantRequest extends FormRequest
                 'errors' => $validator->errors(),
             ], Response::HTTP_BAD_REQUEST)
         );
+    }
+
+    public function messages()
+    {
+        return [
+            'blood_pressure.regex' => 'The blood pressure format must be sistole/diastole.',
+        ];
     }
 }

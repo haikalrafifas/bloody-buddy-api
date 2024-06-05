@@ -6,11 +6,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Models\Schedule;
-use App\Models\Donor;
-use App\Models\DonorSchedule;
+use App\Models\Location;
 use App\Http\Requests\ScheduleRequest;
 use App\Http\Resources\ScheduleResource;
-use App\Http\Resources\DonorScheduleResource;
 use Illuminate\Support\Str;
 
 class ScheduleController extends Controller
@@ -25,18 +23,22 @@ class ScheduleController extends Controller
      */
     public function index()
     {
-        $schedules = Schedule::all();
+        // todo: add count daily quota
+        $schedules = Schedule::with('location')->get();
 
-        $data = ScheduleResource::collection($schedules);
+        // $data = ScheduleResource::collection($schedules);
+        $data = $schedules->map(function ($schedule) {
+            return [
+                'uuid' => $schedule->uuid,
+                'location' => $schedule->location,
+                'daily_quota' => $schedule->daily_quota,
+                'current_daily_quota' => $schedule->getCurrentDailyQuotaAttribute($schedule->id),
+                'start_date' => $schedule->start_date,
+                'end_date' => $schedule->end_date,
+            ];
+        });
 
         return $this->sendResponse($data, 'Successfully get schedules!');
-
-        // $schedules = DonorSchedule::with('donor')->where('user_id', Auth::id());
-
-        // $data = $schedules;
-        // // $data = ScheduleResource::collection($schedules);
-
-        // return $this->sendResponse('Successfully get schedules!', $data);
     }
 
     /**
@@ -44,31 +46,24 @@ class ScheduleController extends Controller
      */
     public function store(ScheduleRequest $request)
     {
-        if ( !($donor = Donor::where('user_id', Auth::id())->where('status_id', 3)->first()) ) {
-            return $this->sendError('Not Found', 'You have no approved donor submissions yet!', Response::HTTP_NOT_FOUND);
+        if ( !($location = Location::where('uuid', $request->location_uuid)->first()) ) {
+            return $this->sendError('Bad Request', 'Location not found!', Response::HTTP_BAD_REQUEST);
         }
-        
-        if ( !($schedule = Schedule::where('uuid', $request->schedule_uuid)->first()) ) {
-            return $this->sendError('Not Found', 'Schedule not found!', Response::HTTP_NOT_FOUND);
-        }
-        
-        try {
-            $donorId = $donor->id;
-            $scheduleId = $schedule->id;
 
-            $donorSchedule = DonorSchedule::create([
+        try {
+            $schedule = Schedule::create([
                 'uuid' => Str::uuid()->toString(),
-                'donor_id' => $donorId,
-                'schedule_id' => $scheduleId,
+                'location_id' => (int) $location->id,
+                'daily_quota' => (int) $request->daily_quota,
+                'start_date' => $request->start_date,
+                'end_date' => $request->end_date,
             ]);
 
-            $donorScheduleData = $donorSchedule->with('donor', 'schedule')->orderBy('created_at', 'desc')->first();
+            $data = new ScheduleResource(
+                $schedule::with(['location'])->orderBy('created_at', 'desc')->first()
+            );
 
-            // $data = $donorScheduleData;
-
-            $data = new DonorScheduleResource($donorScheduleData);
-
-            return $this->sendResponse($data, 'Successfully add new donor schedule!');
+            return $this->sendResponse($data, 'Successfully add new schedule!');
         } catch ( \Exception $e ) {
             return $this->sendError('Internal Server Error', $e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
@@ -93,16 +88,56 @@ class ScheduleController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, string $uuid)
     {
+        // request->nik
+        // 
         // POST /api/schedules/{id}
+
+        if ( !($location = Location::where('uuid', $request->location_uuid)->first()) ) {
+            return $this->sendError('Bad Request', 'Location not found!', Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $schedule = Schedule::create([
+                'uuid' => Str::uuid()->toString(),
+                'location_id' => (int) $location->id,
+                'daily_quota' => (int) $request->daily_quota,
+                'start_date' => $request->start_date,
+                'end_date' => $request->end_date,
+            ]);
+
+            $data = new ScheduleResource(
+                $schedule::with(['location'])->orderBy('created_at', 'desc')->first()
+            );
+
+            return $this->sendResponse($data, 'Successfully add new schedule!');
+        } catch ( \Exception $e ) {
+            return $this->sendError('Internal Server Error', $e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(string $uuid)
     {
-        // DELETE
+        try {
+            if ( !($schedule = Schedule::with('location')->where('uuid', $uuid)) ) {
+                return $this->sendError();
+            }
+
+            $scheduleData = $schedule->first();
+
+            $schedule->delete();
+
+            $data = new ScheduleResource(
+                $schedule->with(['location'])->orderBy('created_at', 'desc')->first()
+            );
+
+            return $this->sendResponse($data, 'Successfully add new schedule!');
+        } catch ( \Exception $e ) {
+            return $this->sendError('Internal Server Error', $e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

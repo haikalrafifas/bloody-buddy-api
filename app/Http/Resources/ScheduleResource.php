@@ -16,10 +16,13 @@ class ScheduleResource extends JsonResource
     {
         return [
             'uuid' => $this->uuid,
-            'daily_quota' => $this->daily_quota,
+            'location' => new LocationResource($this->whenLoaded('location')),
+            'current_daily_quota' => $this->current_daily_quota,
+            'total_daily_quota' => $this->daily_quota,
             'start_date' => $this->start_date,
             'end_date' => $this->end_date,
             'created_at' => $this->created_at,
+            'location' => new LocationResource($this->whenLoaded('location')),
         ];
     }
 }
