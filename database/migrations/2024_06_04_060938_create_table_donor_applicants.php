@@ -23,9 +23,9 @@ return new class extends Migration
             $table->enum('gender', ['M', 'F'])->default('M');
             $table->char('phone_number', 16);
             $table->text('address');
-            $table->char('blood_type', 2);
+            $table->char('blood_type', 3);
             $table->integer('body_mass');
-            $table->integer('hemoglobin_level');
+            $table->float('hemoglobin_level');
             $table->string('blood_pressure');
             $table->text('medical_conditions')->nullable();
             $table->timestamps();

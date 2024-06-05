@@ -32,7 +32,7 @@ class DonorApplicantRequest extends FormRequest
             'address' => 'required|string',
             'body_mass' => 'required|numeric',
             'hemoglobin_level' => 'required|string',
-            'blood_type' => 'required|string|max:2',
+            'blood_type' => 'required|string|max:3',
             'blood_pressure' => 'required|string|regex:/^\d+\/\d+$/',
             'medical_conditions' => 'string',
             'schedule_uuid' => 'required|string',

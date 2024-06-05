@@ -51,13 +51,16 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'email' => 'required|string|email|max:255',//|unique:users',
             'password' => 'required|string|min:6',//|confirmed',
+            'is_admin' => 'boolean',
         ]);
 
         if ( $validator->fails() ) {
             return $this->sendError('Bad Request', errors: $validator->errors(), status: Response::HTTP_BAD_REQUEST);
         }
 
-        if ( !Auth::attempt($request->only('email', 'password')) ) {
+        if ( !Auth::attempt($request->only('email', 'password') + [
+            'is_admin' => $request->has('is_admin') ? $request->is_admin : 0
+        ]) ) {
             return $this->sendError('Unauthorized', 'Account not found!', Response::HTTP_UNAUTHORIZED);
         }
 
