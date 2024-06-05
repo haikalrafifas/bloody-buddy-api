@@ -31,7 +31,7 @@ Route::controller(AuthController::class)->prefix('auth')->group(function () {
 });
 
 Route::controller(DonorController::class)->group(function () {
-    Route::post('donors/{uuid}/edit', [DonorApplicantController::class, 'update']);
+    Route::post('donor-schedule/{uuid}', [DonorApplicantController::class, 'update']);
     Route::resource('donors', DonorApplicantController::class);
 });
 

@@ -26,7 +26,7 @@ class DonorApplicantRequest extends FormRequest
     {
         return [
             'name' => 'required|string',
-            'nik' => 'required|string|max:16',
+            'nik' => 'required|string|min:16|max:16',
             'dob' => 'required|date|date_format:Y-m-d',
             'phone_number' => 'required|string',
             'address' => 'required|string',
