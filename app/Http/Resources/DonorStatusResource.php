@@ -10,10 +10,8 @@ class DonorStatusResource extends JsonResource
     public function toArray(Request $request)
     {
         return [
-            'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'donor_schedules' => DonorScheduleResource::collection($this->whenLoaded('donorSchedules')),
         ];
     }
 }

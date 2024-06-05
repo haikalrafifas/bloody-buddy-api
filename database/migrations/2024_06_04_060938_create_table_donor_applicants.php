@@ -16,6 +16,8 @@ return new class extends Migration
             $table->uuid('uuid');
             $table->char('nik', 16);
             $table->integer('user_id');
+            $table->integer('schedule_id');
+            $table->integer('status_id');
             $table->string('name');
             $table->date('dob');
             $table->enum('gender', ['M', 'F'])->default('M');
@@ -27,6 +29,10 @@ return new class extends Migration
             $table->string('blood_pressure');
             $table->text('medical_conditions')->nullable();
             $table->timestamps();
+            $table->softDeletes();
+            // $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            // $table->foreignId('schedule_id')->constrained()->onDelete('cascade');
+            // $table->foreignId('status_id')->constrained('donor_statuses')->onDelete('cascade');
         });
     }
 

@@ -13,14 +13,13 @@ use Carbon\Carbon;
 
 use App\Models\DonorApplicant;
 use App\Models\Schedule;
-use App\Models\DonorSchedule;
 use App\Models\DonorStatus;
 
 class DonorApplicantController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:api'/*, ['except' => ['index', 'show']]*/);
+        $this->middleware('auth:api');
     }
 
     /**
@@ -29,8 +28,9 @@ class DonorApplicantController extends Controller
     public function index()
     {
         $donors = DonorApplicant::with([
-            'donorSchedules.schedule.location',
-            'donorSchedules.donorStatus',
+            'user',
+            'schedule.location',
+            'status',
         ]);
 
         // If not admin, then only get their respective donor data by applicants\ account
@@ -48,8 +48,6 @@ class DonorApplicantController extends Controller
      */
     public function store(DonorApplicantRequest $request)
     {
-        $userId = Auth::id();
-
         // Age must be between 17 to 60 y.o
         $age = Carbon::now()->diffInYears($request->dob);
         if ( $age < 17 || $age > 60 ) {
@@ -58,7 +56,7 @@ class DonorApplicantController extends Controller
 
         // Check donor cooldown of 2 months
         if (
-            ($donor = DonorApplicant::where('user_id', $userId)->orderBy('created_at', 'desc')->first())
+            ($donor = DonorApplicant::where('nik', $request->nik)->orderBy('created_at', 'desc')->first())
             &&
             Carbon::now()->diffInMonths($donor->created_at) < 2
         ) {
@@ -69,6 +67,24 @@ class DonorApplicantController extends Controller
             );
         }
 
+        // Sequence of medical conditions checking
+        // check body_mass, hemoglobin_level, blood_pressure, medical_history
+        // if ( $request->body_mass < 45 ) {
+        //     return $this->sendError('Bad Request', '', Response::HTTP);
+        // }
+
+        // if ( $request->hemoglobin_level < 12.5 || $request->hemoglobin_level > 17.0 ) {
+        //     return $this->sendError();
+        // }
+
+        // [$sistole, $diastole] = explode('/', $request->blood_pressure);
+        // if ( $sistole < 100 || $sistole > 170 ) {
+        //     return $this->sendError();
+        // }
+        // if ( $diastole < 70 || $diastole > 100 ) {
+        //     return $this->sendError();
+        // }
+
         // Check the availability of the schedule
         if ( !($schedule = Schedule::where('uuid', $request->schedule_uuid)->first()) ) {
             return $this->sendError('Not Found', 'Schedule was not found!', Response::HTTP_NOT_FOUND);
@@ -76,17 +92,22 @@ class DonorApplicantController extends Controller
 
         // Check if the schedule's daily quota is exceeded
         try {
-            DonorSchedule::checkQuota($schedule->id);
+            DonorApplicant::checkQuota($schedule->id);
         } catch (\Exception $e) {
             return $this->sendError('Bad Request', $e->getMessage(), Response::HTTP_BAD_REQUEST);
         }
 
         try {
+            $donorStatus = DonorStatus::where('name', 'Waiting List')->first()->id;
+            $donorStatusId = isset($donorStatus) ? $donorStatus : 1;
+
             $donor = DonorApplicant::create([
                 'uuid' => Str::uuid()->toString(),
                 'name' => $request->name,
                 'nik' => $request->nik,
-                'user_id' => $userId,
+                'user_id' => Auth::id(),
+                'schedule_id' => $schedule->id,
+                'status_id' => $donorStatusId,
                 'dob' => $request->dob,
                 'phone_number' => $request->phone_number,
                 'address' => $request->address,
@@ -97,18 +118,12 @@ class DonorApplicantController extends Controller
                 'medical_conditions' => $request->medical_conditions,
             ]);
 
-            DonorSchedule::create([
-                'uuid' => Str::uuid()->toString(),
-                'donor_id' => $donor->id,
-                'schedule_id' => $schedule->id,
-                'status_id' => DonorStatus::where('name', 'Waiting List')->first()->id,
-            ]);
-
             // $data = new DonorApplicantResource($donor);
             $data = new DonorApplicantResource(
                 $donor->with([
-                    'donorSchedules.schedule.location',
-                    'donorSchedules.donorStatus',
+                    'user',
+                    'schedule.location',
+                    'status',
                 ])->orderBy('created_at', 'desc')->first()
             );
 
@@ -134,33 +149,36 @@ class DonorApplicantController extends Controller
             return $this->sendError('Bad Request', errors: $validator->errors(), status: Response::HTTP_BAD_REQUEST);
         }
 
-        $donorSchedule = DonorSchedule::where('uuid', $uuid);
-
-        // uuid: From donor_schedules, not donor_applicants!
-        if ( !($donorScheduleData = $donorSchedule->first()) ) {
-            return $this->sendError('Not Found', 'Donor applicant schedule was not found!', Response::HTTP_NOT_FOUND);
+        if ( !($donorApplicant = DonorApplicant::where('uuid', $uuid))->first() ) {
+            return $this->sendError('Not Found', 'Donor applicant data was not found!', Response::HTTP_NOT_FOUND);
         }
 
-        $status = DonorStatus::findOrFail($donorScheduleData->status_id);
+        $donorApplicantData = $donorApplicant->first();
+
+        $status = DonorStatus::find($donorApplicantData->status_id);
 
         $validActions = [
-            // action => [status, incrementBy
+            // action => [status, incrementBy, 'actionAlias]
             'approve' => ['Waiting List', 1],
             'reject' => ['Waiting List', 4],
+            'cancel-apply' => ['Waiting List', 5],
             'start' => ['Approved', 1],
+            'cancel-approval' => ['Approved', 5],
             'done' => ['Ongoing', 1],
         ];
 
         $action = $request->action;
 
-        if ( !isset($validActions[$action]) ) {
+        $chosenAction = $validActions[$action];
+
+        if ( !isset($chosenAction) ) {
             return $this->sendError('Bad Request', 'Unknown action!', Response::HTTP_BAD_REQUEST);
         }
 
         // Change the status according to action and current state of status
-        if ( $validActions[$action][0] === $status->name ) {
-            $donorSchedule->update([
-                'status_id' => $status->id + $validActions[$request->action][1],
+        if ( $chosenAction[0] === $status->name ) {
+            $donorApplicant->update([
+                'status_id' => $status->id + $chosenAction[1],
             ]);
         } else {
             return $this->sendError('Bad Request', 'Invalid action to status!', Response::HTTP_BAD_REQUEST);
@@ -169,13 +187,37 @@ class DonorApplicantController extends Controller
         try {
             $data = new DonorApplicantResource(
                 DonorApplicant::with([
-                    'donorSchedules.schedule.location',
-                    'donorSchedules.donorStatus',
-                ])->orderBy('created_at', 'desc')->where('donor_id', Auth::id())->first()
+                    'user',
+                    'schedule.location',
+                    'status',
+                ])->orderBy('created_at', 'desc')->where('id', Auth::id())->first()
             );
 
-            return $this->sendResponse($data, 'Successfully add donor applicant data!');
+            $donorStatus = str_replace('-', ' ', $action);
+
+            return $this->sendResponse($data, 'Successfully change donor applicant status: ' . $donorStatus);
         } catch (Exception $e) {
+            return $this->sendError('Internal Server Error', $e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public function destroy(string $uuid)
+    {
+        try {
+            if ( !($donorApplicants = DonorApplicant::where('uuid', $uuid)) ) {
+                return $this->sendError();
+            }
+
+            $scheduleData = $schedule->first();
+
+            $schedule->delete();
+
+            $data = new ScheduleResource(
+                $schedule->with(['location'])->orderBy('created_at', 'desc')->first()
+            );
+
+            return $this->sendResponse($data, 'Successfully add new schedule!');
+        } catch ( \Exception $e ) {
             return $this->sendError('Internal Server Error', $e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
