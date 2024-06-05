@@ -7,7 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Response;
 
-class DonorRequest extends FormRequest
+class DonorApplicantRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -31,14 +31,15 @@ class DonorRequest extends FormRequest
             'phone_number' => 'required|string',
             'address' => 'required|string',
             'body_mass' => 'required|numeric',
-            'hemoglobin_level' => 'required|numeric',
+            'hemoglobin_level' => 'required|string',
             'blood_type' => 'required|string|max:2',
             'blood_pressure' => 'required|string',
             'medical_conditions' => 'string',
+            'schedule_uuid' => 'required|string',
         ];
     }
 
-    public function failedValidation(Validator $validator)
+    public function failedValidation(Validator $validator) 
     {
         throw new HttpResponseException(
             response()->json([

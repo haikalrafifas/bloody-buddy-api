@@ -16,6 +16,7 @@ return new class extends Migration
             $table->uuid('uuid');
             $table->integer('donor_id');
             $table->integer('schedule_id');
+            $table->integer('status_id')->default(1);
             $table->timestamps();
         });
     }

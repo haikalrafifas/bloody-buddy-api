@@ -23,11 +23,6 @@ class DonorController extends Controller
      */
     public function index()
     {
-        $donors = Donor::where('user_id', Auth::id());
-
-        $data = DonorResource::collection($donors);
-
-        return $this->sendResponse(message: 'Successfully get donors!', data: $data);
     }
 
     /**
@@ -37,7 +32,7 @@ class DonorController extends Controller
     {
         // Age must be between 17 to 60 y.o
         $age = Carbon::now()->diffInYears($request->dob);
-        if ( $age < 17 || $age > 60 ) {
+        if ($age < 17 || $age > 60) {
             return $this->sendError('Bad Request', 'Invalid age!', Response::HTTP_BAD_REQUEST);
         }
 
@@ -74,7 +69,7 @@ class DonorController extends Controller
             $data = new DonorResource($donor);
 
             return $this->sendResponse($data, 'Successfully add donor!');
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return $this->sendError('Internal Server Error', $e->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -84,7 +79,11 @@ class DonorController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $donors = Donor::where('user_id', Auth::id());
+
+        $data = DonorResource::collection($donors);
+
+        return $this->sendResponse(message: 'Successfully get donors!', data: $data);
     }
 
     /**
