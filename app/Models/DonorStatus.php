@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class DonorStatus extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -18,8 +19,8 @@ class DonorStatus extends Model
 
     protected $casts = [];
 
-    public function donorSchedules()
+    public function donorApplicants()
     {
-        return $this->hasMany(DonorSchedule::class, 'status_id');
+        return $this->hasMany(DonorApplicant::class);
     }
 }
