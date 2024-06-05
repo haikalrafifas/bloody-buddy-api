@@ -16,11 +16,10 @@ class ScheduleResource extends JsonResource
     {
         return [
             'uuid' => $this->uuid,
-            'address' => $this->address,
+            'daily_quota' => $this->daily_quota,
             'start_date' => $this->start_date,
             'end_date' => $this->end_date,
-            'image' => $this->image,
-            // 'created_at' => $this->created_at,
+            'created_at' => $this->created_at,
         ];
     }
 }
