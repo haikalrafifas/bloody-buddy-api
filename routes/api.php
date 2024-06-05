@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\AuthController;
 // use App\Http\Controllers\StatusController;
-use App\Http\Controllers\DonorController;
+use App\Http\Controllers\DonorApplicantController;
 use App\Http\Controllers\ScheduleController;
 
 /*
@@ -31,7 +31,8 @@ Route::controller(AuthController::class)->prefix('auth')->group(function () {
 });
 
 Route::controller(DonorController::class)->group(function () {
-    Route::resource('donors', DonorController::class);
+    Route::post('donors/{uuid}/edit', [DonorApplicantController::class, 'update']);
+    Route::resource('donors', DonorApplicantController::class);
 });
 
 Route::controller(ScheduleController::class)->group(function () {
