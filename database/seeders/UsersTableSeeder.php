@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\User;
+use Illuminate\Support\Str;
 
 class UsersTableSeeder extends Seeder
 {
@@ -14,9 +15,9 @@ class UsersTableSeeder extends Seeder
     public function run(): void
     {
         User::insert([
-        ['name' => 'Administrator', 'email' => 'admin@localhost', 'password' => bcrypt('123456'), 'is_admin' => 1],
-        ['name' => 'User Pertama', 'email' => 'user1@localhost', 'password' => bcrypt('123456'), 'is_admin' => 0],
-        ['name' => 'User Kedua', 'email' => 'user2@localhost', 'password' => bcrypt('123456'), 'is_admin' => 0],
+        ['uuid' => Str::uuid()->toString(), 'username' => 'Administrator', 'email' => 'admin@localhost', 'password' => bcrypt('123456'), 'is_admin' => 1],
+        ['uuid' => Str::uuid()->toString(), 'username' => 'User Pertama', 'email' => 'user1@localhost', 'password' => bcrypt('123456'), 'is_admin' => 0],
+        ['uuid' => Str::uuid()->toString(), 'username' => 'User Kedua', 'email' => 'user2@localhost', 'password' => bcrypt('123456'), 'is_admin' => 0],
         ]);
     }
 }

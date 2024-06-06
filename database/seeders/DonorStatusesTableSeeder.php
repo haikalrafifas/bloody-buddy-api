@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\DonorStatuses;
+use App\Models\DonorStatus;
 use Illuminate\Support\Str;
 
 class DonorStatusesTableSeeder extends Seeder
@@ -14,7 +14,7 @@ class DonorStatusesTableSeeder extends Seeder
      */
     public function run(): void
     {
-        DonorStatuses::insert([
+        DonorStatus::insert([
         ['name' => 'Waiting List', 'description' => 'Form submitted, awaiting approval'],
         ['name' => 'Approved', 'description' => 'Eligible to donate'],
         ['name' => 'Ongoing', 'description' => 'Currently Ongoing'],
