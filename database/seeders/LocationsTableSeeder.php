@@ -4,8 +4,8 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\Models\Location;
 use Illuminate\Support\Str;
+use App\Models\Location;
 
 class LocationsTableSeeder extends Seeder
 {
