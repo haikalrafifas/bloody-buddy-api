@@ -19,15 +19,13 @@ A REST API repository for app Bloody Buddy, a blood donor web-based application.
 1. Download PHP (^8.x) and Composer (^2.x)
 2. Run your MySQL database server
 3. Clone this repo
-4. Copy the .env.example file and rename that to .env
-5. Change the `DB_DATABASE` value on the .env file into the database name you like
-6. Run composer update then install
-7. Run these commands on your terminal sequentially
-  ```
-  composer update
-  composer install
-  ```
-1. Run this command to start the server:
+4. Run these commands to initialize the app:
+   ```
+   composer update
+   composer install
+   composer init-app
+   ```
+5. Run this command to start the server:
   ```
   php artisan serve
   ```

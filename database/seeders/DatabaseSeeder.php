@@ -30,7 +30,7 @@ class DatabaseSeeder extends Seeder
 
             // Check if the seeder is not DatabaseSeeder itself
             if ($seederClass !== 'DatabaseSeeder') {
-                echo 'Database\\Seeders\\' . $seederClass;
+                echo 'Seeding Database\\Seeders\\' . $seederClass;
                 $this->call('Database\\Seeders\\' . $seederClass);
             }
         }

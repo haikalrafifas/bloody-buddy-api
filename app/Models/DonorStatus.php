@@ -12,6 +12,7 @@ class DonorStatus extends Model
 
     protected $fillable = [
         'name',
+        'classname',
         'description',
     ];
 

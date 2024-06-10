@@ -16,6 +16,7 @@ class DonorStatusResource extends JsonResource
             'name' => $this->name,
             'description' => $this->description,
             'actions' => '',
+            'classname' => $this->classname,
         ];
 
         if ( $this->name === 'Waiting List' ) $data['actions'] = $isAdmin ? 'approve,reject' : 'cancel';

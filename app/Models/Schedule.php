@@ -36,8 +36,12 @@ class Schedule extends Model
 
     public function getCurrentDailyQuotaAttribute($schedule_id = 0)
     {
+        // Only count current quota if the status is either Waiting List or Approved
         if ( $this->exists && $schedule_id !== 0 ) {
-            return $this->donorApplicants()->where('schedule_id', $schedule_id)->count();
+            return $this->donorApplicants()
+            ->where('schedule_id', $schedule_id)
+            ->whereIn('status_id', [1, 2, 3])
+            ->count();
         }
 
         return null;
